@@ -217,3 +217,57 @@ if __name__ == "__main__":
 
             if __name__ == "__main__":
                 start_server()
+
+                import socket
+                import sys
+
+
+                def send_request(client_socket, operation, key, value=None):
+                    if operation == 'PUT':
+                        message = f"PUT {key} {value}"
+                    elif operation == 'READ':
+                        message = f"READ {key}"
+                    elif operation == 'GET':
+                        message = f"GET {key}"
+                    else:
+                        print("Invalid operation")
+                        return
+
+                    # Send a request to the server
+                    client_socket.sendall(message.encode('utf-8'))
+                    # Receive the response from the server
+                    response = client_socket.recv(1024).decode('utf-8')
+                    print(f"Operation: {operation}, Key: {key}, Response: {response}")
+
+
+                def main():
+                    if len(sys.argv) != 2:
+                        print("Usage: python tuple_space_client.py <request_file>")
+                        sys.exit(1)
+
+                    request_file = sys.argv[1]
+                    # Create a TCP socket object
+                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    # Connect to the server
+                    client_socket.connect(('localhost', 8888))
+
+                    try:
+                        with open(request_file, 'r') as file:
+                            for line in file:
+                                parts = line.strip().split()
+                                operation = parts[0]
+                                key = parts[1]
+                                if operation == 'PUT':
+                                    value = parts[2]
+                                    send_request(client_socket, operation, key, value)
+                                else:
+                                    send_request(client_socket, operation, key)
+                    except Exception as e:
+                        print(f"Error: {e}")
+                    finally:
+                        # Close the client socket connection
+                        client_socket.close()
+
+
+                if __name__ == "__main__":
+                    main()
